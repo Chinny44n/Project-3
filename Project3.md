@@ -351,3 +351,348 @@ The Package.json file was opened in the todo folder. The circled part was delete
 },`
 
 ![Image34](./Images/Image34.PNG)
+
+![Image35](./Images/Image35.PNG)
+
+To configure proxy in the package.json file, the package.json file will be opened from the client directory
+
+`cd client`
+
+`vi package.json`
+
+Next, the key value pair "proxy": "http://localhost:5000" is added into the package.jsaon file and saved.
+
+![Image36](./Images/Image36.PNG)
+
+The whole purpose of adding the proxy configuration in number 3 above makes it possible to access the application directly from the browser by simply calling the server url like http://localhost:5000 rather than always including the entire path like http://localhost:5000/api/todos.
+
+To be able to access the application from the internet, Port 3000 was opened from the ECS security group on the EC2 AWS management console. 
+
+![Image37](./Images/Image37.PNG)
+
+This next command was run from the todo directory and the screen shot that follows shows the app is open and running on 
+localhost:3000
+
+`npm run dev`
+
+![Image38](./Images/Image38.PNG)
+
+![Image39](./Images/Image39.PNG)
+
+To create the react components, I ran the following commands to get started:
+
+`cd client`
+
+`cd src`
+
+`mkdir components`
+
+`cd components`
+
+`touch Input.js ListTodo.js Todo.js`
+
+The screen shot below shows the three files input.js, listTodo.js and Todo.js files created in the components directory.
+
+![Image40](./Images/Image40.PNG)
+
+Next, the input.js file was opened had the following code saved inside
+
+`vi Input.js`
+
+`import React, { Component } from 'react';
+import axios from 'axios';
+
+class Input extends Component {
+
+state = {
+action: ""
+}
+
+addTodo = () => {
+const task = {action: this.state.action}
+
+    if(task.action && task.action.length > 0){
+      axios.post('/api/todos', task)
+        .then(res => {
+          if(res.data){
+            this.props.getTodos();
+            this.setState({action: ""})
+          }
+        })
+        .catch(err => console.log(err))
+    }else {
+      console.log('input field required')
+    }
+
+}
+
+handleChange = (e) => {
+this.setState({
+action: e.target.value
+})
+}
+
+render() {
+let { action } = this.state;
+return (
+<div>
+<input type="text" onChange={this.handleChange} value={action} />
+<button onClick={this.addTodo}>add todo</button>
+</div>
+)
+}
+}
+
+export default Input`
+
+![Image41](./Images/Image41.PNG)
+
+Axios is a Promise based HTTP client for the browser and node.js. To install Axios, i changed into the client directory. 
+
+Then ran the following command:
+
+`npm install axios`
+
+![Image42](./Images/Image42.PNG)
+
+Going back into the components directory, I opned the listtodo.js file and saved the following code inside it.
+
+`vi ListTodo.js`
+
+`import React from 'react';
+
+const ListTodo = ({ todos, deleteTodo }) => {
+
+return (
+<ul>
+{
+todos &&
+todos.length > 0 ?
+(
+todos.map(todo => {
+return (
+<li key={todo._id} onClick={() => deleteTodo(todo._id)}>{todo.action}</li>
+)
+})
+)
+:
+(
+<li>No todo(s) left</li>
+)
+}
+</ul>
+)
+}
+
+export default ListTodo
+
+![Image43](./Images/Image43.PNG)
+
+I aslo opened the Todo.js file and saved the following code inside.
+
+ `import React, {Component} from 'react';
+import axios from 'axios';
+
+import Input from './Input';
+import ListTodo from './ListTodo';
+
+class Todo extends Component {
+
+state = {
+todos: []
+}
+
+componentDidMount(){
+this.getTodos();
+}
+
+getTodos = () => {
+axios.get('/api/todos')
+.then(res => {
+if(res.data){
+this.setState({
+todos: res.data
+})
+}
+})
+.catch(err => console.log(err))
+}
+
+deleteTodo = (id) => {
+
+    axios.delete(`/api/todos/${id}`)
+      .then(res => {
+        if(res.data){
+          this.getTodos()
+        }
+      })
+      .catch(err => console.log(err))
+
+}
+
+render() {
+let { todos } = this.state;
+
+    return(
+      <div>
+        <h1>My Todo(s)</h1>
+        <Input getTodos={this.getTodos}/>
+        <ListTodo todos={todos} deleteTodo={this.deleteTodo}/>
+      </div>
+    )
+
+}
+}
+
+export default Todo;`
+
+![Image44](./Images/Image44.PNG)
+
+A little adjustment is needed to be made to the react app. The api.js file is opened and the logo is deleted and the following code added and saved into it.
+
+`vi App.js`
+
+`import React from 'react';
+
+import Todo from './components/Todo';
+import './App.css';
+
+const App = () => {
+return (
+<div className="App">
+<Todo />
+</div>
+);
+}
+
+export default App;`
+
+![Image45](./Images/Image45.PNG)
+
+From the src directory, the App.css file was opened and the following code added and saved inside it.
+
+`vi App.css`
+
+`.App {
+text-align: center;
+font-size: calc(10px + 2vmin);
+width: 60%;
+margin-left: auto;
+margin-right: auto;
+}
+
+input {
+height: 40px;
+width: 50%;
+border: none;
+border-bottom: 2px #101113 solid;
+background: none;
+font-size: 1.5rem;
+color: #787a80;
+}
+
+input:focus {
+outline: none;
+}
+
+button {
+width: 25%;
+height: 45px;
+border: none;
+margin-left: 10px;
+font-size: 25px;
+background: #101113;
+border-radius: 5px;
+color: #787a80;
+cursor: pointer;
+}
+
+button:focus {
+outline: none;
+}
+
+ul {
+list-style: none;
+text-align: left;
+padding: 15px;
+background: #171a1f;
+border-radius: 5px;
+}
+
+li {
+padding: 15px;
+font-size: 1.5rem;
+margin-bottom: 15px;
+background: #282c34;
+border-radius: 5px;
+overflow-wrap: break-word;
+cursor: pointer;
+}
+
+@media only screen and (min-width: 300px) {
+.App {
+width: 80%;
+}
+
+input {
+width: 100%
+}
+
+button {
+width: 100%;
+margin-top: 15px;
+margin-left: 0;
+}
+}
+
+@media only screen and (min-width: 640px) {
+.App {
+width: 60%;
+}
+
+input {
+width: 50%;
+}
+
+button {
+width: 30%;
+margin-left: 10px;
+margin-top: 0;
+}
+}`
+
+![Image46](./Images/Image46.PNG)
+
+From the src directory again, the index.css file was opened and the following code added and saved inside it.
+
+`vim index.css`
+
+`body {
+margin: 0;
+padding: 0;
+font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
+"Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
+sans-serif;
+-webkit-font-smoothing: antialiased;
+-moz-osx-font-smoothing: grayscale;
+box-sizing: border-box;
+background-color: #282c34;
+color: #787a80;
+}
+
+code {
+font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
+monospace;
+}`
+
+![Image46](./Images/Image46.PNG)
+
+Now, back into out todo directory, the command below was ran to show the todo app is ready and fully functional with the functionality discussed earlier: creating a task, deleting a task and viewing all your tasks.
+
+`npm run dev`
+
+![Image47](./Images/Image47.PNG)
+
+The screen shot below confirms the todo app is functional and can be assesed from the browser using localhost:3000
+
+![Image48](./Images/Image48.PNG)
