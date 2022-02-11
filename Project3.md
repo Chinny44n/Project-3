@@ -228,5 +228,126 @@ A database is needed tp store data. Mlab provides MongoDB database as a service 
 
 Ealier, in the index.js file, dotenv was specified to access environment variables but the file was no created. The file shall be created now.
 
- A file named .env is created in the todo directory. This file is opened and a connaction string gotten from the clusters free account is saved inside it.
+ A file named .env is created in the todo directory. This file is opened and a connaction string gotten from the clusters (see format below) free account is saved inside it.
 
+ `touch .env`
+
+ `vi .env`
+
+ DB = 'mongodb+srv://<username>:<password>@<network-address>/<dbname>?retryWrites=true&w=majority'
+
+ ![Image25](./Images/Image25.PNG)
+
+ The index.js file needs to be updated to reflect the use of .env so that nodejs can connect to the database.
+
+ To update the index.js file; Open the file, 
+
+ `vim index.js`
+
+Delete contents and save the following code inside it, 
+
+ `const express = require('express');
+const bodyParser = require('body-parser');
+const mongoose = require('mongoose');
+const routes = require('./routes/api');
+const path = require('path');
+require('dotenv').config();
+
+const app = express();
+
+const port = process.env.PORT || 5000;
+
+//connect to the database
+mongoose.connect(process.env.DB, { useNewUrlParser: true, useUnifiedTopology: true })
+.then(() => console.log(`Database connected successfully`))
+.catch(err => console.log(err));
+
+//since mongoose promise is depreciated, we overide it with node's promise
+mongoose.Promise = global.Promise;
+
+app.use((req, res, next) => {
+res.header("Access-Control-Allow-Origin", "\*");
+res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+next();
+});
+
+app.use(bodyParser.json());
+
+app.use('/api', routes);
+
+app.use((err, req, res, next) => {
+console.log(err);
+next();
+});
+
+app.listen(port, () => {
+console.log(`Server running on port ${port}`)
+});`
+
+![Image26](./Images/Image26.PNG)
+
+The server ran susccessfully and strting it using the following command.
+
+`node index.js`
+
+![Image27](./Images/Image27.PNG)
+
+So far, the backend code of out todo application has been wriiten and a database configured. This code will be tested using RESTful API.
+
+POSTMAN wil be installed and used to test the API. 
+
+A POST request to the API was created in POSTMAN with URL format below. This request will send a new task to the todo list and store it in the database . 
+
+http://<PublicIP-or-PublicDNS>:5000/api/todos..
+
+![Image28](./Images/Image28.PNG)
+
+A GET request was created to the API with the URL format below. This request retrieves all existing records from the Todo application (backend requests these records from the database and sends it back as a response to GET request).
+
+http://<PublicIP-or-PublicDNS>:5000/api/todos..
+
+![Image29](./Images/Image29.PNG)
+
+The above shows that the backend part of the todo application have been tested and supports the operations that we wanted :
+
+- Display a list of tasks – HTTP GET request
+- Add a new task to the list – HTTP POST request
+
+
+STEP 2- FRONTEND CREATION
+
+It is now time to create a user interface for a Web client (browser) to interact with the application via API.
+
+The command below was used to start out with the frontend of the todo app. This command ran in the todo directory, was used to scaffold the app.
+
+`npx create-react-app client`
+
+![Image29](./Images/Image29.PNG)
+
+This created a folder in the todo directory named client, were all the react code was saved in.
+
+![Image31](./Images/Image31.PNG)
+
+![Image31b](./Images/Image31b.PNG)
+
+Before testing the react app. some dependencies, concurrently and nodemon were installed.
+
+`npm install concurrently --save-dev`
+
+`npm install nodemon --save-dev`
+
+![Image33](./Images/Image33.PNG)
+
+Concurrently is used to run more than one command simultaneously from the same terminal window and nodemon is used to run and monitor the server. If there is any change in the server code, nodemon will restart it automatically and load the new changes.
+
+The Package.json file was opened in the todo folder. The circled part was deleted and following code was added and saved in the folder .
+
+![Image49](./Images/Image49.PNG)
+
+`"scripts": {
+"start": "node index.js",
+"start-watch": "nodemon index.js",
+"dev": "concurrently \"npm run start-watch\" \"cd client && npm start\""
+},`
+
+![Image34](./Images/Image34.PNG)
